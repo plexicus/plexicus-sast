@@ -55,7 +55,7 @@ runs:
           docker_command+=" -v \"$files_to_analyze:/app/files_to_analyze.txt\""
         fi
 
-        docker_command+=" plexicus/plexalyzer-dev:latest \
+        docker_command+=" plexicus/plexalyzer-code-dev:latest \
           /venvs/plexicus-fastapi/bin/python /app/analyze.py \
           --name \"${{ inputs.repo-name }}\" \
           --branch \"${{ inputs.branch }}\" \
