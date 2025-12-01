@@ -1,3 +1,4 @@
+# TODO UPDATE THIS FILE
 # Plexalyzer Action
 
 Official GitHub Action for COVULOR cloud service by Plexicus. Analyze your code directly in your Pull Requests.
@@ -52,17 +53,29 @@ jobs:
           echo "files_path=$(pwd)/files_to_scan.json" >> $GITHUB_ENV
 
       - name: Run PLEXALYZER Analysis
+        id: plexalyzer
         uses: plexicus/plexicus-action@<ACTION_BRANCH>
         with:
-          plexalyzer-token: ${{ secrets.<PLEXALYZER_TOKEN_SECRET_NAME> }}
           default-owner: ${{ github.event.repository.owner.login }}
-          repo-id: ${{ vars.<REPO_ID_VARIABLE_NAME> }}
           repo-name: ${{ github.repository }}
           branch: ${{ github.event.pull_request.base.ref || github.ref_name }}
           url: ${{ github.event.repository.clone_url }}
           pr-id: ${{ github.event.pull_request.number }}
           files-path: ${{ env.files_path }}
           workspace-path: ${{ github.workspace }}
+
+      - name: Save SARIF output to file
+        if: steps.plexalyzer.outcome == 'success'
+        shell: bash
+        run: |
+          printf '%s' "${{ steps.plexalyzer.outputs.sarif-output }}" > results.sarif
+
+      - name: Upload SARIF results to GitHub
+        if: steps.plexalyzer.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
+          category: plexalyzer
 
 ```
 
@@ -87,6 +100,7 @@ jobs:
 - Direct integration with COVULOR cloud service
 - Real-time results in your Pull Requests
 - Secure token-based authentication
+- SARIF output upload to GitHub Code Scanning
 
 ## Requirements
 

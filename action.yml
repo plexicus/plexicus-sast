@@ -7,15 +7,9 @@ branding:
   icon: 'shield'
   color: 'blue'
 inputs:
-  plexalyzer-token:
-    description: 'Authentication token for COVULOR cloud service'
-    required: true
   default-owner:
     description: 'Default repository owner'
     required: false
-  repo-id:
-    description: 'Repository ID in COVULOR service'
-    required: true
   repo-name:
     description: 'Name of the repository'
     required: true
@@ -34,6 +28,10 @@ inputs:
   workspace-path:
     description: 'Path to the repository workspace'
     required: true
+outputs:
+  sarif-output:
+    description: 'SARIF output from the analysis'
+    value: ${{ steps.run-analysis.outputs.sarif-output }}
 runs:
   using: 'composite'
   steps:
@@ -46,31 +44,27 @@ runs:
         echo "files_to_analyze=$(pwd)/files_to_analyze.txt" >> $GITHUB_ENV
 
     - name: Run PLEXALYZER Docker Analysis
+      id: run-analysis
       shell: bash
-      env:
-        PLEXALYZER_TOKEN: ${{ inputs.plexalyzer-token }}
-        MESSAGE_URL: 'https://api.app.dev.plexicus.ai/receive_plexalyzer_message'
       run: |
         # Construct the Docker command
         docker_command="docker run --rm \
-          -e PLEXALYZER_TOKEN=\"$PLEXALYZER_TOKEN\" \
-          -e MESSAGE_URL=\"$MESSAGE_URL\" \
           -v \"${{ inputs.workspace-path }}:/mounted_volumes\""
 
         if [ -n "${files_to_analyze}" ]; then
           docker_command+=" -v \"$files_to_analyze:/app/files_to_analyze.txt\""
         fi
-        
+
         docker_command+=" plexicus/plexalyzer-dev:latest \
           /venvs/plexicus-fastapi/bin/python /app/analyze.py \
-          --repository_id \"${{ inputs.repo-id }}\" \
           --name \"${{ inputs.repo-name }}\" \
           --branch \"${{ inputs.branch }}\" \
           --url \"${{ inputs.url }}\" \
           --pr-id \"${{ inputs.pr-id }}\" \
+          --output \"sarif\" \
           --no-progress-bar"
 
-        if [ ${{ inputs.default-owner }} ]; then
+        if [ -n "${{ inputs.default-owner }}" ]; then
           docker_command+=" --owner \"${{ inputs.default-owner }}\""
         fi
 
@@ -78,4 +72,11 @@ runs:
           docker_command+=" --files \"/app/files_to_analyze.txt\""
         fi
 
-        eval $docker_command
+        # Run docker command and capture output to file
+        eval $docker_command > sarif_output.json
+
+        # Output the SARIF content
+        sarif_content=$(cat sarif_output.json)
+        echo "sarif-output<<EOF" >> $GITHUB_OUTPUT
+        echo "$sarif_content" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
