@@ -61,7 +61,6 @@ runs:
           --branch \"${{ inputs.branch }}\" \
           --url \"${{ inputs.url }}\" \
           --pr-id \"${{ inputs.pr-id }}\" \
-          --output \"sarif\" \
           --no-progress-bar"
 
         if [ -n "${{ inputs.default-owner }}" ]; then
