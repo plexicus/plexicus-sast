@@ -46,7 +46,8 @@ jobs:
 
       - name: Run PLEXALYZER Analysis
         id: plexalyzer
-        uses: plexicus/plexicus-action@<ACTION_BRANCH>
+        continue-on-error: true
+        uses: plexicus/plexicus-sast@main
         with:
           default-owner: ${{ github.event.repository.owner.login }}
           repo-name: ${{ github.repository }}
@@ -56,14 +57,7 @@ jobs:
           files-path: ${{ env.files_path }}
           workspace-path: ${{ github.workspace }}
 
-      - name: Save SARIF output to file
-        if: steps.plexalyzer.outcome == 'success'
-        shell: bash
-        run: |
-          printf '%s' "${{ steps.plexalyzer.outputs.sarif-output }}" > results.sarif
-
       - name: Upload SARIF results to GitHub
-        if: steps.plexalyzer.outcome == 'success'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif

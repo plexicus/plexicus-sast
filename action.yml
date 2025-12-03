@@ -73,10 +73,10 @@ runs:
         fi
 
         # Run docker command and capture output to file
-        eval $docker_command > sarif_output.json
+        eval $docker_command > results.sarif
 
-        # Output the SARIF content
-        sarif_content=$(cat sarif_output.json)
+        # Output the SARIF content (for backward compatibility)
+        sarif_content=$(cat results.sarif)
         echo "sarif-output<<EOF" >> $GITHUB_OUTPUT
         echo "$sarif_content" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
