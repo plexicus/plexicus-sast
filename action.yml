@@ -28,10 +28,6 @@ inputs:
   workspace-path:
     description: 'Path to the repository workspace'
     required: true
-outputs:
-  sarif-output:
-    description: 'SARIF output from the analysis'
-    value: ${{ steps.run-analysis.outputs.sarif-output }}
 runs:
   using: 'composite'
   steps:
@@ -74,9 +70,3 @@ runs:
 
         # Run docker command and capture output to file
         eval $docker_command > results.sarif
-
-        # Output the SARIF content (for backward compatibility)
-        sarif_content=$(cat results.sarif)
-        echo "sarif-output<<EOF" >> $GITHUB_OUTPUT
-        echo "$sarif_content" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
